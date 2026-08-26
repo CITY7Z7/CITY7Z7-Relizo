@@ -1,4 +1,4 @@
-# Welcome to Relizo project
+# Welcome to Relizo
 
 ## What technologies are used for this project?
 
