@@ -38,6 +38,7 @@ From a fresh clone, install deps and run the dev server using the package.json s
 
 ```
 npm install
+or ( npm install --legacy-peer-deps )
 npm run dev
 ```
 
