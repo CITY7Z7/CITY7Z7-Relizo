@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { localClient as supabase } from "@/integrations/local/client";
+import { Tables, TablesInsert, TablesUpdate } from "@/types/database";
 
 // Type aliases
 export type DbTrack = Tables<"tracks">;

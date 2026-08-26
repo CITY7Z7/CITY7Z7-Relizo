@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateTrack, useCreateWork, useTracks, useWorks } from "@/hooks/useDatabase";
-import { Database } from "@/integrations/supabase/types";
+import { Database } from "@/types/database";
 import { GenreMultiSelect } from "@/components/GenreMultiSelect";
 
 type TrackType = Database["public"]["Enums"]["track_type"];

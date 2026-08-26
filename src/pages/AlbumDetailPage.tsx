@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Disc3, Music, Loader2, Copy, Upload } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { localClient as supabase } from "@/integrations/local/client";
 import { useRef } from "react";
 
 export default function AlbumDetailPage() {

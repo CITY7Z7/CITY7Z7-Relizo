@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { localClient as supabase } from "@/integrations/local/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,11 +56,6 @@ export default function AuthPage() {
     else toast.success("Account created");
   };
 
-  const handleGoogle = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (result.error) toast.error(String(result.error));
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md">
@@ -102,15 +96,6 @@ export default function AuthPage() {
               </form>
             </TabsContent>
           </Tabs>
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or</span>
-            </div>
-          </div>
-          <Button type="button" variant="outline" className="w-full" onClick={handleGoogle}>
-            Continue with Google
-          </Button>
         </CardContent>
       </Card>
     </div>

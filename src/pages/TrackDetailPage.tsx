@@ -10,8 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Database } from "@/integrations/supabase/types";
-import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/types/database";
+import { localClient as supabase } from "@/integrations/local/client";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { GenreMultiSelect } from "@/components/GenreMultiSelect";
 
@@ -142,10 +142,9 @@ export default function TrackDetailPage() {
   const processAudioMetadata = async (fileUrl: string) => {
     setProcessingAudio(true);
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const res = await fetch(`https://${projectId}.supabase.co/functions/v1/process-audio`, {
+      const res = await fetch(`/api/process-audio`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ file_url: fileUrl, track_id: track.id }),
       });
       const result = await res.json();

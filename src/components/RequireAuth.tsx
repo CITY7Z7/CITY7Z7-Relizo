@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { supabase } from "@/integrations/supabase/client";
-import type { Session } from "@supabase/supabase-js";
+import { localClient as supabase } from "@/integrations/local/client";
+import type { Session } from "@/integrations/local/client";
 import { Button } from "@/components/ui/button";
 import { Lock, LogIn, Loader2 } from "lucide-react";
 
