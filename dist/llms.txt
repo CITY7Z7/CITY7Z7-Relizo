@@ -1,0 +1,21 @@
+# Relizo
+
+> Music release operations workspace for independent artists and labels to manage catalogs, releases, distributors, and promotion in one place.
+
+Relizo is a single-user media asset manager built around the music release lifecycle. It organizes works, tracks, and albums; tracks release status across a calendar; and helps coordinate distribution and promotion channels. The app uses a left-sidebar navigation with a dashboard overview and dedicated sections for the music catalog, release planning, and distribution management.
+
+## Pages
+
+- [Dashboard](/): Overview of releases, tasks, status distribution, and recent tracks.
+- [Tracks](/tracks): Catalog of works and tracks with collapsible work trees and metadata.
+- [Track Detail](/tracks/:id): Full metadata, audio preview, cover art, and version history for a track.
+- [Add Track](/tracks/new): Form for creating a new track or work.
+- [Albums](/albums): Album/EP listing and management.
+- [Album Detail](/albums/:id): Album metadata, tracklist, and distribution details.
+- [Releases](/releases): Release calendar and planning timeline.
+- [Distributors](/distributors): Distribution partner management and channels.
+- [Promotion](/promotion): Promotional task tracking and outreach.
+
+## Optional
+
+- [Sign In](/auth): Authentication page for existing and new accounts.

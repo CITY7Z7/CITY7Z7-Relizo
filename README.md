@@ -42,12 +42,18 @@ or ( npm install --legacy-peer-deps )
 npm run dev
 ```
 
+---
+admin@relizo.app
+admin123
+
 Other useful scripts:
 - npm run build        # production build
 - npm run preview      # preview built site
 - npm test             # run tests (vitest)
 
 Notes on environment: the code depends on a database/auth backend (supabase and a cloud-auth package appear in package.json). Expect to provide the usual backend environment variables (e.g., Supabase URL / anon/service keys or other auth credentials) before signing in and loading real data.
+
+Create a `.env.local` file from `.env.example` and set the Supabase publishable key from the project settings. The configured project ID is `jxtemnpnienrpfkebsis`.
 
 ## Try asking
 - Where is the data access code (the implementation of useDatabase) and how does it authenticate to Supabase or the backend?
