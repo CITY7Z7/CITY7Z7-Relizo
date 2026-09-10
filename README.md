@@ -52,8 +52,3 @@ Other useful scripts:
 - npm test             # run tests (vitest)
 
 Data is stored locally in `data/relizo.sqlite`. The Vite development server provides the local API and file storage on `localhost:8080`; no environment variables or external services are required.
-
-## Try asking
-- Where is the data access code (the implementation of useDatabase) and how is local persistence handled?
-- I see PL/pgSQL in the repo stats — where are the DB schema / migration files and how are they applied?
-- How is RequireAuth implemented (which provider/flow does it use) and where is the auth configuration stored?
