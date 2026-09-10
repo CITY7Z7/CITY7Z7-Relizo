@@ -8,9 +8,31 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useCreateTrack, useCreateWork, useTracks, useWorks } from "@/hooks/useDatabase";
+import { useCreateTrack, useTracks, useWorks } from "@/hooks/useDatabase";
 import { Database } from "@/types/database";
 import { GenreMultiSelect } from "@/components/GenreMultiSelect";
+
+function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h3 className="text-[10px] uppercase tracking-[0.1em] font-semibold text-muted-foreground mb-4">{title}</h3>
+      <div className="grid grid-cols-2 gap-4">{children}</div>
+    </div>
+  );
+}
+
+function FormField({ label, field, form, onChange, type = "text", placeholder = "", colSpan = false }: { label: string; field: string; form: Record<string, any>; onChange: (field: string, value: string) => void; type?: string; placeholder?: string; colSpan?: boolean }) {
+  return (
+    <div className={`space-y-1.5 ${colSpan ? "col-span-2" : ""}`}>
+      <Label className="text-xs">{label}</Label>
+      {type === "textarea" ? (
+        <Textarea placeholder={placeholder} value={String(form[field] ?? "")} onChange={e => onChange(field, e.target.value)} rows={3} className="shadow-sm" />
+      ) : (
+        <Input type={type} placeholder={placeholder} value={String(form[field] ?? "")} onChange={e => onChange(field, e.target.value)} className="shadow-sm" />
+      )}
+    </div>
+  );
+}
 
 type TrackType = Database["public"]["Enums"]["track_type"];
 
@@ -19,7 +41,6 @@ const trackTypes: TrackType[] = ["Original", "Remix", "VIP Remix", "Edit", "Exte
 export default function AddTrackPage() {
   const navigate = useNavigate();
   const createTrack = useCreateTrack();
-  const createWork = useCreateWork();
   const { data: allTracks = [] } = useTracks();
   const { data: allWorks = [] } = useWorks();
 
@@ -52,7 +73,7 @@ export default function AddTrackPage() {
         genre: form.genre,
         subgenre: form.subgenre,
         language: form.language,
-        explicit_flag: form.explicit_flag,
+        explicit_flag: form.explicit_flag ? 1 : 0,
         track_type: form.track_type,
         version_name: form.version_name,
         parent_track_id: form.parent_track_id === "none" ? null : form.parent_track_id,
@@ -82,24 +103,6 @@ export default function AddTrackPage() {
     }
   };
 
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div>
-      <h3 className="text-[10px] uppercase tracking-[0.1em] font-semibold text-muted-foreground mb-4">{title}</h3>
-      <div className="grid grid-cols-2 gap-4">{children}</div>
-    </div>
-  );
-
-  const F = ({ label, field, type = "text", placeholder = "", colSpan = false }: { label: string; field: string; type?: string; placeholder?: string; colSpan?: boolean }) => (
-    <div className={`space-y-1.5 ${colSpan ? "col-span-2" : ""}`}>
-      <Label className="text-xs">{label}</Label>
-      {type === "textarea" ? (
-        <Textarea placeholder={placeholder} value={(form as any)[field] || ""} onChange={e => set(field, e.target.value)} rows={3} className="shadow-sm" />
-      ) : (
-        <Input type={type} placeholder={placeholder} value={(form as any)[field] || ""} onChange={e => set(field, e.target.value)} className="shadow-sm" />
-      )}
-    </div>
-  );
-
   return (
     <div className="p-6 max-w-3xl">
       <div className="flex items-center gap-3 mb-6">
@@ -110,10 +113,10 @@ export default function AddTrackPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="rounded-xl bg-card shadow-studio p-6 space-y-8">
-        <Section title="Basic Info">
-          <F label="Title *" field="title" placeholder="Track title" />
-          <F label="Artist *" field="artist" placeholder="Primary artist" />
-          <F label="Featured Artists" field="featured_artists" placeholder="Featured artists" />
+        <FormSection title="Basic Info">
+          <FormField label="Title *" field="title" form={form} onChange={set} placeholder="Track title" />
+          <FormField label="Artist *" field="artist" form={form} onChange={set} placeholder="Primary artist" />
+          <FormField label="Featured Artists" field="featured_artists" form={form} onChange={set} placeholder="Featured artists" />
           <div className="space-y-1.5">
             <Label className="text-xs">Work (Composition)</Label>
             <Select value={form.work_id} onValueChange={v => set("work_id", v)}>
@@ -130,15 +133,15 @@ export default function AddTrackPage() {
             <Label className="text-xs">Genre</Label>
             <GenreMultiSelect value={form.genre} onChange={v => set("genre", v)} />
           </div>
-          <F label="Subgenre" field="subgenre" placeholder="Subgenre" />
-          <F label="Language" field="language" placeholder="e.g. English" />
+          <FormField label="Subgenre" field="subgenre" form={form} onChange={set} placeholder="Subgenre" />
+          <FormField label="Language" field="language" form={form} onChange={set} placeholder="e.g. English" />
           <div className="flex items-center gap-3 col-span-2">
             <Switch checked={form.explicit_flag} onCheckedChange={v => set("explicit_flag", v)} />
             <Label className="text-xs">Explicit Content</Label>
           </div>
-        </Section>
+        </FormSection>
 
-        <Section title="Version Info">
+        <FormSection title="Version Info">
           <div className="space-y-1.5">
             <Label className="text-xs">Track Type *</Label>
             <Select value={form.track_type} onValueChange={v => set("track_type", v)}>
@@ -148,7 +151,7 @@ export default function AddTrackPage() {
               </SelectContent>
             </Select>
           </div>
-          <F label="Version Name" field="version_name" placeholder="e.g. Extended Mix" />
+          <FormField label="Version Name" field="version_name" form={form} onChange={set} placeholder="e.g. Extended Mix" />
           <div className="space-y-1.5">
             <Label className="text-xs">Parent Track</Label>
             <Select value={form.parent_track_id} onValueChange={v => set("parent_track_id", v)}>
@@ -162,18 +165,18 @@ export default function AddTrackPage() {
             </Select>
           </div>
           {(form.track_type === "Remix" || form.track_type === "VIP Remix") && (
-            <F label="Remixer Artist" field="remixer_artist" placeholder="Remixer name" />
+            <FormField label="Remixer Artist" field="remixer_artist" form={form} onChange={set} placeholder="Remixer name" />
           )}
-        </Section>
+        </FormSection>
 
-        <Section title="Core Metadata">
-          <F label="Album Artist" field="album_artist" placeholder="Album artist" />
-          <F label="Year" field="year" type="number" placeholder="2026" />
-          <F label="Track Number" field="track_number" type="number" />
-          <F label="Disc Number" field="disc_number" type="number" />
-          <F label="Publisher" field="publisher" />
-          <F label="Composer" field="composer" />
-          <F label="Conductor" field="conductor" />
+        <FormSection title="Core Metadata">
+          <FormField label="Album Artist" field="album_artist" form={form} onChange={set} placeholder="Album artist" />
+          <FormField label="Year" field="year" form={form} onChange={set} type="number" placeholder="2026" />
+          <FormField label="Track Number" field="track_number" form={form} onChange={set} type="number" />
+          <FormField label="Disc Number" field="disc_number" form={form} onChange={set} type="number" />
+          <FormField label="Publisher" field="publisher" form={form} onChange={set} />
+          <FormField label="Composer" field="composer" form={form} onChange={set} />
+          <FormField label="Conductor" field="conductor" form={form} onChange={set} />
           <div className="space-y-1.5">
             <Label className="text-xs">Release Type</Label>
             <Select value={form.release_type || "none"} onValueChange={v => set("release_type", v === "none" ? "" : v)}>
@@ -186,30 +189,30 @@ export default function AddTrackPage() {
               </SelectContent>
             </Select>
           </div>
-          <F label="Release Date" field="release_date" placeholder="YYYY-MM-DD" />
-        </Section>
+          <FormField label="Release Date" field="release_date" form={form} onChange={set} placeholder="YYYY-MM-DD" />
+        </FormSection>
 
-        <Section title="Audio Technical Data">
-          <F label="BPM" field="bpm" type="number" placeholder="120" />
-          <F label="Musical Key" field="musical_key" placeholder="e.g. G# Minor" />
-          <F label="Duration" field="duration" placeholder="e.g. 4:32" />
-          <F label="ISRC" field="isrc" placeholder="US-RC1-23-00012" />
-          <F label="UPC" field="upc" placeholder="UPC code" />
-        </Section>
+        <FormSection title="Audio Technical Data">
+          <FormField label="BPM" field="bpm" form={form} onChange={set} type="number" placeholder="120" />
+          <FormField label="Musical Key" field="musical_key" form={form} onChange={set} placeholder="e.g. G# Minor" />
+          <FormField label="Duration" field="duration" form={form} onChange={set} placeholder="e.g. 4:32" />
+          <FormField label="ISRC" field="isrc" form={form} onChange={set} placeholder="US-RC1-23-00012" />
+          <FormField label="UPC" field="upc" form={form} onChange={set} placeholder="UPC code" />
+        </FormSection>
 
-        <Section title="Description & Text">
-          <F label="Description" field="description" type="textarea" placeholder="Track description" colSpan />
-          <F label="Comment" field="comment" type="textarea" colSpan />
-          <F label="Lyrics" field="lyrics" type="textarea" placeholder="Paste lyrics" colSpan />
-          <F label="Grouping" field="grouping" />
-          <F label="Track Notes" field="track_notes" type="textarea" colSpan />
-          <F label="Catalog Tags" field="catalog_tags" placeholder="tag1, tag2, ..." />
-        </Section>
+        <FormSection title="Description & Text">
+          <FormField label="Description" field="description" form={form} onChange={set} type="textarea" placeholder="Track description" colSpan />
+          <FormField label="Comment" field="comment" form={form} onChange={set} type="textarea" colSpan />
+          <FormField label="Lyrics" field="lyrics" form={form} onChange={set} type="textarea" placeholder="Paste lyrics" colSpan />
+          <FormField label="Grouping" field="grouping" form={form} onChange={set} />
+          <FormField label="Track Notes" field="track_notes" form={form} onChange={set} type="textarea" colSpan />
+          <FormField label="Catalog Tags" field="catalog_tags" form={form} onChange={set} placeholder="tag1, tag2, ..." />
+        </FormSection>
 
-        <Section title="Contributors">
-          <F label="Musicians" field="musicians" type="textarea" colSpan />
-          <F label="Additional Contributors" field="additional_contributors" type="textarea" colSpan />
-        </Section>
+        <FormSection title="Contributors">
+          <FormField label="Musicians" field="musicians" form={form} onChange={set} type="textarea" colSpan />
+          <FormField label="Additional Contributors" field="additional_contributors" form={form} onChange={set} type="textarea" colSpan />
+        </FormSection>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
           <Link to="/tracks">
