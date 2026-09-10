@@ -30,6 +30,14 @@ function localApi() {
   for (const [table, columns] of Object.entries(tables)) db.exec(`CREATE TABLE IF NOT EXISTS ${table} (id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))), ${columns})`);
   const json = (res: any, status: number, body: any) => { res.statusCode = status; res.setHeader("Content-Type", "application/json"); res.end(JSON.stringify(body)); };
   const readBody = (req: any) => new Promise<any>((resolve, reject) => { let raw = ""; req.on("data", (chunk: Buffer) => raw += chunk); req.on("end", () => resolve(raw ? JSON.parse(raw) : {})); req.on("error", reject); });
+  const sqliteBind = (key: string, value: any) => {
+    if (key === "waveform_peaks") return JSON.stringify(value ?? []);
+    if (typeof value === "boolean") return value ? 1 : 0;
+    if (typeof value === "number" && !Number.isFinite(value)) return null;
+    if (value === undefined) return null;
+    if (value !== null && typeof value === "object") return JSON.stringify(value);
+    return value;
+  };
   return { name: "local-sqlite-api", configureServer(server: any) {
     server.middlewares.use(async (req: any, res: any, next: any) => {
       if (!req.url?.startsWith("/api/")) return next();
@@ -43,10 +51,10 @@ function localApi() {
         const table = url.pathname.match(/^\/api\/db\/([a-z_]+)$/)?.[1]; if (!table || !tables[table]) return json(res, 404, { error: "Unknown local table" });
         const filters = Object.fromEntries(url.searchParams.entries()); delete filters.order; delete filters.ascending; delete filters.single;
         if (req.method === "GET") { let sql = `SELECT * FROM ${table}`; const values = Object.values(filters); const keys = Object.keys(filters); if (keys.length) sql += ` WHERE ${keys.map(key => `${key} = ?`).join(" AND ")}`; if (url.searchParams.get("order")) sql += ` ORDER BY ${url.searchParams.get("order")} ${url.searchParams.get("ascending") === "false" ? "DESC" : "ASC"}`; const rows = db.prepare(sql).all(...values).map((row: any) => ({ ...row, explicit_flag: !!row.explicit_flag, completed: !!row.completed, waveform_peaks: JSON.parse(row.waveform_peaks || "[]") })); return json(res, 200, { data: url.searchParams.get("single") === "true" ? (rows[0] || null) : rows }); }
-        const body = await readBody(req); const operation = body.operation; const keys = Object.keys(body.payload || {}); const values = keys.map(key => key === "waveform_peaks" ? JSON.stringify(body.payload[key]) : body.payload[key]); let result: any;
-        if (operation === "insert") { const rows = Array.isArray(body.payload) ? body.payload : [body.payload]; result = rows.map((row: any) => { const cols = Object.keys(row); const vals = cols.map(key => key === "waveform_peaks" ? JSON.stringify(row[key]) : row[key]); const id = crypto.randomUUID().replaceAll("-", ""); db.prepare(`INSERT INTO ${table} (id, ${cols.join(",")}) VALUES (?, ${cols.map(() => "?").join(",")})`).run(id, ...vals); return db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(id); }); result = Array.isArray(body.payload) ? result : result[0]; }
-        if (operation === "update") { const where = Object.keys(body.filters); db.prepare(`UPDATE ${table} SET ${keys.map(key => `${key} = ?`).join(", ")} WHERE ${where.map(key => `${key} = ?`).join(" AND ")}`).run(...values, ...Object.values(body.filters)); result = db.prepare(`SELECT * FROM ${table} WHERE ${where.map(key => `${key} = ?`).join(" AND ")}`).get(...Object.values(body.filters)); }
-        if (req.method === "DELETE") { const where = Object.keys(body.filters).length ? body.filters : filters; db.prepare(`DELETE FROM ${table} WHERE ${Object.keys(where).map(key => `${key} = ?`).join(" AND ")}`).run(...Object.values(where)); result = null; }
+        const body = await readBody(req); const operation = body.operation; const keys = Object.keys(body.payload || {}); const values = keys.map(key => sqliteBind(key, body.payload[key])); let result: any;
+        if (operation === "insert") { const rows = Array.isArray(body.payload) ? body.payload : [body.payload]; result = rows.map((row: any) => { const cols = Object.keys(row); const vals = cols.map(key => sqliteBind(key, row[key])); const id = crypto.randomUUID().replaceAll("-", ""); db.prepare(`INSERT INTO ${table} (id, ${cols.join(",")}) VALUES (?, ${cols.map(() => "?").join(",")})`).run(id, ...vals); return db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(id); }); result = Array.isArray(body.payload) ? result : result[0]; }
+        if (operation === "update") { const where = Object.keys(body.filters || {}); db.prepare(`UPDATE ${table} SET ${keys.map(key => `${key} = ?`).join(", ")} WHERE ${where.map(key => `${key} = ?`).join(" AND ")}`).run(...values, ...Object.values(body.filters || {})); result = db.prepare(`SELECT * FROM ${table} WHERE ${where.map(key => `${key} = ?`).join(" AND ")}`).get(...Object.values(body.filters || {})); }
+        if (req.method === "DELETE") { const where = (body.filters && Object.keys(body.filters).length) ? body.filters : filters; db.prepare(`DELETE FROM ${table} WHERE ${Object.keys(where).map(key => `${key} = ?`).join(" AND ")}`).run(...Object.values(where)); result = null; }
         return json(res, 200, { data: result });
       } catch (error: any) { return json(res, 400, { error: error.message }); }
     });

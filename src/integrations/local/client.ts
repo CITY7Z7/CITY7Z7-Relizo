@@ -30,7 +30,13 @@ class QueryBuilder {
     if (this.one) query.set("single", "true");
     const init: RequestInit = { method: this.operation === "select" ? "GET" : this.operation === "delete" ? "DELETE" : "POST" };
     if (this.operation === "insert" || this.operation === "update") {
-      init.body = JSON.stringify({ operation: this.operation, payload: this.payload, filters: this.filters });
+      const sanitize = (row: Row) => Object.fromEntries(Object.entries(row).map(([k, v]) => {
+        if (typeof v === "boolean") return [k, v ? 1 : 0];
+        if (typeof v === "number" && !Number.isFinite(v)) return [k, null];
+        return [k, v];
+      }));
+      const payload = Array.isArray(this.payload) ? this.payload.map(sanitize) : sanitize(this.payload);
+      init.body = JSON.stringify({ operation: this.operation, payload, filters: this.filters });
       init.headers = { "Content-Type": "application/json" };
     }
     return request(`/db/${this.table}?${query}`, init).then(resolve, reject);
